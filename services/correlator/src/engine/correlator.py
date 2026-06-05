@@ -9,6 +9,14 @@ from shared.schemas.event import AlertStatus, SOAREvent, Severity
 logger = logging.getLogger(__name__)
 CORRELATION_WINDOW = timedelta(minutes=30)
 
+_SEV_RANK = {
+    Severity.INFO:     0,
+    Severity.LOW:      1,
+    Severity.MEDIUM:   2,
+    Severity.HIGH:     3,
+    Severity.CRITICAL: 4,
+}
+
 @dataclass
 class CorrelationCluster:
     id: UUID
@@ -21,8 +29,10 @@ class CorrelationCluster:
     def add(self, event: SOAREvent) -> None:
         self.events.append(event)
         self.updated_at = datetime.utcnow()
-        sev_order = list(Severity)
-        self.severity = max((e.severity for e in self.events), key=lambda s: sev_order.index(s))
+        self.severity = max(
+            (e.severity for e in self.events),
+            key=lambda s: _SEV_RANK[s]
+        )
         for ip in [n.ip for n in event.indicators.network if n.ip]:
             self.ioc_index[f"ip:{ip}"].append(event.id)
         for h in [h.hostname for h in event.indicators.hosts if h.hostname]:
@@ -30,7 +40,7 @@ class CorrelationCluster:
 
     @property
     def is_stale(self) -> bool:
-        return datetime.utcnow() - self.updated_at > CORRELATION_WINDOW
+        return (datetime.utcnow() - self.updated_at) > CORRELATION_WINDOW
 
 class CorrelationEngine:
     def __init__(self) -> None:
