@@ -10,7 +10,6 @@ jobs:
   test:
     name: Tests
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -27,9 +26,31 @@ jobs:
             prometheus-client
 
       - name: Run unit tests
-        run: |
-          python -m pytest tests/unit/ -v --tb=short
+        run: python -m pytest tests/unit/ -v --tb=short
 
       - name: Run integration tests
-        run: |
-          python -m pytest tests/integration/ -v --tb=short
+        run: python -m pytest tests/integration/ -v --tb=short
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: test-results.xml
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install bandit
+        run: pip install bandit
+
+      - name: Run bandit SAST
+        run: bandit -r services/ shared/ -ll -ii
