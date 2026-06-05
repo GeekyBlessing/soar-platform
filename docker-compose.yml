@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: soar
+      POSTGRES_USER: soar
+      POSTGRES_PASSWORD: soar
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soar"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+
+  localstack:
+    image: localstack/localstack:3
+    ports: ["4566:4566"]
+    environment:
+      - SERVICES=kinesis,sqs,dynamodb,s3,secretsmanager
+      - KINESIS_INITIALIZE_STREAMS=soar-events:4
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      retries: 15
+
+  ingestor:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: uvicorn services.ingestor.src.main:app --host 0.0.0.0 --port 8001 --reload
+    ports: ["8001:8001"]
+    environment:
+      - PYTHONPATH=/app
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_ENDPOINT_URL=http://localstack:4566
+    volumes:
+      - .:/app
+    depends_on:
+      localstack:
+        condition: service_healthy
