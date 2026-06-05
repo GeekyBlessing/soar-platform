@@ -4,12 +4,16 @@ from typing import Annotated, Any
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 from ..normalizers.security_hub import SecurityHubNormalizer
+from ..normalizers.crowdstrike import CrowdStrikeNormalizer
 from ..normalizers.base import NormalizationError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1/ingest", tags=["ingest"])
 
-_REGISTRY = {"aws.securityhub": SecurityHubNormalizer()}
+_REGISTRY = {
+    "aws.securityhub":    SecurityHubNormalizer(),
+    "crowdstrike.falcon": CrowdStrikeNormalizer(),
+}
 
 async def _verify(
     request: Request,
@@ -39,12 +43,22 @@ async def ingest_webhook(
         event = await normalizer.normalize(raw)
     except NormalizationError as e:
         raise HTTPException(422, str(e)) from e
-    logger.info("event_received id=%s severity=%s", event.id, event.severity)
+    logger.info("event_received id=%s source=%s severity=%s", event.id, event.source, event.severity)
     return JSONResponse(
-        content={"event_id": str(event.id), "severity": event.severity, "status": "accepted"},
+        content={
+            "event_id": str(event.id),
+            "source": event.source,
+            "severity": event.severity,
+            "fingerprint": event.fingerprint,
+            "status": "accepted",
+        },
         status_code=202,
     )
 
 @router.get("/health")
 async def health() -> dict:
-    return {"status": "healthy", "service": "ingestor"}
+    return {"status": "healthy", "service": "ingestor", "sources": list(_REGISTRY.keys())}
+
+@router.get("/sources")
+async def list_sources() -> dict:
+    return {"registered_sources": list(_REGISTRY.keys())}
