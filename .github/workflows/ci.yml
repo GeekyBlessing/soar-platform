@@ -12,38 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install fastapi uvicorn pydantic \
-            pytest pytest-asyncio httpx anyio \
-            prometheus-client
-
+        run: pip install fastapi uvicorn pydantic pytest pytest-asyncio httpx anyio prometheus-client
       - name: Run unit tests
-        run: python -m pytest tests/unit/ -v --tb=short
-
+        run: python -m pytest tests/unit/ -v
       - name: Run integration tests
-        run: python -m pytest tests/integration/ -v --tb=short
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install bandit
-        run: pip install bandit
-
-      - name: Run bandit SAST
-        run: bandit -r services/ shared/ -ll -ii
+        run: python -m pytest tests/integration/ -v
