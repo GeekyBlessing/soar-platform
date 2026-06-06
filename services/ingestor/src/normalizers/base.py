@@ -1,7 +1,6 @@
 from __future__ import annotations
 import abc, hashlib, json
 from typing import Any
-from shared.schemas.event import Indicators, SOAREvent, Severity
 
 class NormalizationError(Exception):
     pass

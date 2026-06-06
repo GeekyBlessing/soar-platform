@@ -1,5 +1,6 @@
 from __future__ import annotations
-import asyncio, logging
+import asyncio
+import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -51,7 +52,7 @@ class CorrelationEngine:
 
     async def process(self, event: SOAREvent) -> tuple[SOAREvent, bool]:
         async with self._lock:
-            if existing_id := self._fingerprint_cache.get(event.fingerprint):
+            if self._fingerprint_cache.get(event.fingerprint):
                 logger.info("dedup fingerprint=%s", event.fingerprint)
                 return event, True
             self._fingerprint_cache[event.fingerprint] = event.id
