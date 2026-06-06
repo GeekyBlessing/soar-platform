@@ -31,13 +31,6 @@ jobs:
       - name: Run integration tests
         run: python -m pytest tests/integration/ -v --tb=short
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: test-results.xml
-
   security:
     name: Security Scan
     runs-on: ubuntu-latest
