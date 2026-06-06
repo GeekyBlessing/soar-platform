@@ -22,6 +22,7 @@ _REGISTRY = {
     "wiz.cloud":          WizNormalizer(),
 }
 
+
 async def _verify(
     request: Request,
     x_soar_signature: Annotated[str | None, Header()] = None,
@@ -47,6 +48,7 @@ async def _verify(
     check_rate_limit(x_soar_source)
     return x_soar_source
 
+
 @router.post("/webhook")
 async def ingest_webhook(
     request: Request,
@@ -61,21 +63,22 @@ async def ingest_webhook(
     except NormalizationError as e:
         raise HTTPException(422, str(e)) from e
     logger.info(
-        "event_received id=%s source=%s severity=%s fingerprint=%s",
-        event.id, event.source, event.severity, event.fingerprint,
+        "event_received id=%s source=%s severity=%s",
+        event.id, event.source, event.severity,
     )
     return JSONResponse(
         content={
-            "event_id":    str(event.id),
-            "source":      event.source,
-            "severity":    event.severity,
-            "fingerprint": event.fingerprint,
+            "event_id":     str(event.id),
+            "source":       event.source,
+            "severity":     event.severity,
+            "fingerprint":  event.fingerprint,
             "mitre_tactic": event.mitre_tactic,
-            "risk_score":  event.risk_score,
-            "status":      "accepted",
+            "risk_score":   event.risk_score,
+            "status":       "accepted",
         },
         status_code=202,
     )
+
 
 @router.post("/webhook/batch")
 async def ingest_batch(
@@ -101,6 +104,7 @@ async def ingest_batch(
         status_code=202,
     )
 
+
 @router.get("/health")
 async def health() -> dict:
     return {
@@ -109,6 +113,7 @@ async def health() -> dict:
         "version": "1.0.0",
         "sources": list(_REGISTRY.keys()),
     }
+
 
 @router.get("/sources")
 async def list_sources() -> dict:

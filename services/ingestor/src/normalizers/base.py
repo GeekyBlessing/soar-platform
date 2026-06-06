@@ -1,9 +1,14 @@
 from __future__ import annotations
-import abc, hashlib, json
+import abc
+import hashlib
+import json
 from typing import Any
+from shared.schemas.event import Indicators, SOAREvent
+
 
 class NormalizationError(Exception):
     pass
+
 
 class BaseNormalizer(abc.ABC):
     SOURCE_ID: str

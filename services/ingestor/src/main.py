@@ -33,10 +33,6 @@ app = FastAPI(
     title="SOAR Platform",
     description="Cloud-native Security Orchestration, Automation and Response",
     version="1.0.0",
-    contact={
-        "name": "GeekyBlessing",
-        "url": "https://github.com/GeekyBlessing/soar-platform",
-    }
 )
 
 app.add_middleware(
@@ -45,6 +41,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.middleware("http")
 async def metrics_middleware(request: Request, call_next):
@@ -59,18 +56,14 @@ async def metrics_middleware(request: Request, call_next):
         method=request.method,
         status=response.status_code,
     ).inc()
-    log.info(
-        '%s %s %s %.3fs',
-        request.method,
-        request.url.path,
-        response.status_code,
-        duration,
-    )
+    log.info("%s %s %s %.3fs", request.method, request.url.path, response.status_code, duration)
     return response
+
 
 @app.get("/metrics", include_in_schema=False)
 async def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 
 @app.get("/", include_in_schema=False)
 async def root():
@@ -82,5 +75,6 @@ async def root():
         "health": "/v1/ingest/health",
         "github": "https://github.com/GeekyBlessing/soar-platform",
     }
+
 
 app.include_router(router)

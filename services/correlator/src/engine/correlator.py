@@ -43,6 +43,7 @@ class CorrelationCluster:
     def is_stale(self) -> bool:
         return (datetime.utcnow() - self.updated_at) > CORRELATION_WINDOW
 
+
 class CorrelationEngine:
     def __init__(self) -> None:
         self._fingerprint_cache: dict[str, UUID] = {}
